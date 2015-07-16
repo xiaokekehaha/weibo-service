@@ -82,9 +82,9 @@ public class SinaWeiboAPI {
 	public SinaDomain statusesUserTimelineByUid(String uid, String sinceId, String maxId, int count, int page,
 			int baseApp, int feature, int trimUser, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.STATUSES_USER_TIMELINE, source)
-		.setParams("uid", uid).setParams("since_id", sinceId).setParams("max_id", maxId)
-		.setParams("count", count + "").setParams("page", page + "").setParams("base_app", baseApp + "")
-		.setParams("feature", feature + "").setParams("trim_user", trimUser + "").build();
+				.setParams("uid", uid).setParams("since_id", sinceId).setParams("max_id", maxId)
+				.setParams("count", count + "").setParams("page", page + "").setParams("base_app", baseApp + "")
+				.setParams("feature", feature + "").setParams("trim_user", trimUser + "").build();
 		String data = clientDao.doGet(requestURL.getURL());
 		SinaDomain result = parseJsonTree(data);
 		return result;
@@ -99,10 +99,10 @@ public class SinaWeiboAPI {
 	public SinaDomain statusesUserTimelineByScreenName(String screenName, String sinceId, String maxId, int count,
 			int page, int baseApp, int feature, int trimUser, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.STATUSES_USER_TIMELINE, source)
-		.setParams("screen_name", URLCodecUtils.encoder(screenName, "UTF-8")).setParams("since_id", sinceId)
-		.setParams("max_id", maxId).setParams("count", count + "").setParams("page", page + "")
-		.setParams("base_app", baseApp + "").setParams("feature", feature + "")
-		.setParams("trim_user", trimUser + "").build();
+				.setParams("screen_name", URLCodecUtils.encoder(screenName, "UTF-8")).setParams("since_id", sinceId)
+				.setParams("max_id", maxId).setParams("count", count + "").setParams("page", page + "")
+				.setParams("base_app", baseApp + "").setParams("feature", feature + "")
+				.setParams("trim_user", trimUser + "").build();
 		String data = clientDao.doGet(requestURL.getURL());
 		SinaDomain result = parseJsonTree(data);
 		return result;
@@ -189,8 +189,8 @@ public class SinaWeiboAPI {
 
 	public SinaDomain friendshipsFriends(String uid, int count, int cursor, int trim_status, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.FRIEDNSHIPS_FRIEDNS, source)
-				.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "")
-				.setParams("trim_status", trim_status + "").build();
+		.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "")
+		.setParams("trim_status", trim_status + "").build();
 		String data = clientDao.doGet(requestURL.getURL());
 		SinaDomain result = parseJsonTree(data);
 		return result;
@@ -209,7 +209,7 @@ public class SinaWeiboAPI {
 
 	public SinaDomain friendshipsFriendsIDs(String uid, int count, int cursor, String cookie, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.FRIENDSHIPS_FRIENDS_IDS, source)
-				.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "").build();
+		.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "").build();
 		String data = clientDao.doGet(requestURL.getURL(), cookie, "UTF-8");
 		SinaDomain result = parseJsonTreeIDs(data);
 		return result;
@@ -229,8 +229,8 @@ public class SinaWeiboAPI {
 
 	public SinaDomain friendshipsFollowers(String uid, int count, int cursor, int trim_status, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.FRIENDSHIPS_FOLLOWERS, source)
-				.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "")
-				.setParams("trim_status", trim_status + "").build();
+		.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "")
+		.setParams("trim_status", trim_status + "").build();
 		String data = clientDao.doGet(requestURL.getURL());
 		SinaDomain result = parseJsonTree(data);
 		return result;
@@ -249,7 +249,7 @@ public class SinaWeiboAPI {
 
 	public SinaDomain friendshipsFollowersIDs(String uid, int count, int cursor, String cookie, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.FRIEDNSHIPS_FOLLOWERS_IDS, source)
-				.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "").build();
+		.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "").build();
 		String data = clientDao.doGet(requestURL.getURL(), cookie, "UTF-8");
 		SinaDomain result = parseJsonTreeIDs(data);
 		return result;
@@ -266,7 +266,7 @@ public class SinaWeiboAPI {
 
 	public SinaDomain friendshipsFollowersActive(String uid, int count, int cursor, String source) {
 		RequestURL requestURL = new RequestURL.Builder(SinaWeiboConstant.FRIENDSHIPS_FOLLOWERS_ACTIVE, source)
-				.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "").build();
+		.setParams("uid", uid).setParams("count", count + "").setParams("cursor", cursor + "").build();
 		String data = clientDao.doGet(requestURL.getURL());
 		SinaDomain result = parseJsonTree(data);
 		return result;
