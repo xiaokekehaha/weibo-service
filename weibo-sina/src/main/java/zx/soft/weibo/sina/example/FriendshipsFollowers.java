@@ -20,6 +20,7 @@ public class FriendshipsFollowers {
 		//
 		//		for (int i = 0; i < 20000; i++) {
 		//			pool.execute(new FollowersRunnable(api, "1642591402"));
+		//			System.out.println("thread" + i);
 		//		}
 
 	}

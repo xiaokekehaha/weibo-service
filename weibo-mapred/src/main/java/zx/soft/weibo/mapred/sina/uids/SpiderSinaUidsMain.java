@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import zx.soft.hbase.api.core.HBaseClient;
+import zx.soft.hbase.api.core.HBaseTable;
 import zx.soft.redis.client.cache.Cache;
 import zx.soft.redis.client.cache.CacheFactory;
 import zx.soft.utils.http.ClientDao;
@@ -17,11 +19,13 @@ import zx.soft.utils.threads.ApplyThreadPool;
 import zx.soft.weibo.mapred.hdfs.HdfsWriter;
 import zx.soft.weibo.mapred.hdfs.HdfsWriterSimpleImpl;
 
+import com.google.protobuf.ServiceException;
+
 public class SpiderSinaUidsMain {
 
 	private static Logger logger = LoggerFactory.getLogger(SpiderSinaUidsMain.class);
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException, ServiceException {
 		long count = Long.MAX_VALUE;
 		if (args.length >= 1) {
 			count = Long.valueOf(args[0]);
@@ -41,10 +45,14 @@ public class SpiderSinaUidsMain {
 
 		ClientDao clientDao = new HttpClientDaoImpl();
 		SinaRelationshipDao dao = getSinaRelationshipDao(clientDao);
-
+		HBaseClient client = new HBaseClient();
+		if (!client.isTableExists(Spider.SINA_USER_BASEINFO)) {
+			client.createTable(Spider.SINA_USER_BASEINFO, Spider.USER_BASEINFO_COLUMNFAMILIES);
+		}
+		client.close();
+		HBaseTable table = new HBaseTable(Spider.SINA_USER_BASEINFO);
 		final int cpuNum = 64;
 		final ThreadPoolExecutor pool = ApplyThreadPool.getThreadPoolExector(cpuNum);
-
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -57,7 +65,7 @@ public class SpiderSinaUidsMain {
 				String uid = cache.spop(Spider.WAIT_USERS_KEY);
 				if (uid != null) {
 					try {
-						pool.execute(new Spider(uid, cache, writer, dao));
+						pool.execute(new Spider(uid, cache, writer, dao, table));
 					} catch (IllegalArgumentException e) {
 						logger.warn("illegal argumentException, uid={}", uid);
 					} catch (Exception e) {
@@ -73,7 +81,7 @@ public class SpiderSinaUidsMain {
 			}
 			pool.shutdown();
 			pool.awaitTermination(30, TimeUnit.SECONDS);
-
+			table.close();
 		}
 
 		ApplyThreadPool.stop(cpuNum);
@@ -84,12 +92,12 @@ public class SpiderSinaUidsMain {
 		return (SinaRelationshipDao) Proxy.newProxyInstance(SinaRelationshipDao.class.getClassLoader(),
 				new Class[] { SinaRelationshipDao.class }, new RetryHandler<SinaRelationshipDao>(
 						new SinaRelationshipDaoImpl(clientDao), 5000, 10) {
-					@Override
-					protected boolean isRetry(Throwable e) {
-						Throwable cause = e.getCause();
-						return cause instanceof Exception;
-					}
-				});
+			@Override
+			protected boolean isRetry(Throwable e) {
+				Throwable cause = e.getCause();
+				return cause instanceof Exception;
+			}
+		});
 	}
 
 }

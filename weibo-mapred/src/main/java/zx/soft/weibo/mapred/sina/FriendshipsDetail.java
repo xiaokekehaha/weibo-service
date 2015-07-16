@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import zx.soft.weibo.mapred.domain.User;
 import zx.soft.weibo.mapred.domain.UsersAndIds;
+import zx.soft.weibo.mapred.utils.RequestLimitException;
 import zx.soft.weibo.mapred.utils.SinaDomainUtils;
 import zx.soft.weibo.sina.api.SinaWeiboAPI;
 import zx.soft.weibo.sina.domain.SinaDomain;
@@ -31,7 +32,8 @@ public class FriendshipsDetail {
 	// IP请求频次超过上限
 	public static final String IP_REQUEST_LIMIT = "10022";
 
-	public static UsersAndIds getFriendships(SinaWeiboAPI api, String uid, boolean isFollower) {
+	public static UsersAndIds getFriendships(SinaWeiboAPI api, String uid, boolean isFollower)
+			throws RequestLimitException {
 		SinaDomain sinaDomain = null;
 		if (isFollower) {
 			sinaDomain = api.friendshipsFollowers(uid, PAGE_COUNT, 0, 1);
@@ -41,7 +43,8 @@ public class FriendshipsDetail {
 		if (sinaDomain.getFieldValue("error_code") != null) {
 			logger.info("Request error_code:{},error:{}", sinaDomain.getFieldValue("error_code").toString(), sinaDomain
 					.getFieldValue("error").toString());
-			return null;
+			throw new RequestLimitException(IP_REQUEST_LIMIT);
+			//return null;
 		}
 		List<User> users = new ArrayList<>();
 		List<String> ids = new ArrayList<>();
@@ -72,5 +75,4 @@ public class FriendshipsDetail {
 		}
 		return new UsersAndIds(users, ids);
 	}
-
 }
