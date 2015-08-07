@@ -31,7 +31,7 @@ public class HistoryWeibo {
 				logger.error("IP requests out of rate limit");
 				//SourceId.addIdUselesses(source);
 				//SourceId.removeIdUseful(source);
-				logger.info("return null");
+				logger.error("return null");
 				return null;
 			}
 			if (sinaDomain != null) {

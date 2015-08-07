@@ -19,17 +19,19 @@ public class ActiveThread implements Runnable {
 	private ActiveUser activeUser;
 	private int from;
 	private HConnection conn;
+	private String sinceId;
 
-	public ActiveThread(int from, HConnection conn) {
+	public ActiveThread(int from, HConnection conn, String sinceId) {
 		this.activeUser = new ActiveUser(new HttpClientDaoImpl());
 		this.from = from;
 		this.conn = conn;
+		this.sinceId = sinceId;
 	}
 
 	@Override
 	public void run() {
 		List<String> uids = activeUser.getActiveUserId(from);
-		List<Weibo> weibos = activeUser.getActiveUserWeibo(uids);
+		List<Weibo> weibos = activeUser.getActiveUserWeibo(uids, sinceId);
 		//存储获得的微博信息
 		save(weibos);
 	}

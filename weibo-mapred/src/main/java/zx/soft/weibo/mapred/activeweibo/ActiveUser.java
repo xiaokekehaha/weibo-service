@@ -39,14 +39,13 @@ public class ActiveUser {
 	 * feature	:过滤类型ID，0：全部、1：原创、2：图片、3：视频、4：音乐，默认为0。
 	 * trim_user:返回值中user字段开关，0：返回完整user字段、1：user字段仅返回user_id，默认为0。
 	 */
-	public List<Weibo> getActiveUserWeibo(List<String> ids) {
+	public List<Weibo> getActiveUserWeibo(List<String> ids, String since_id) {
 		List<Weibo> weibos = new ArrayList<>();
 		for (String id : ids) {
-			SinaDomain sinaDomain = api.statusesUserTimelineByUid(id, "0", "0", 10, 1, 0, 0, 0);
+			SinaDomain sinaDomain = api.statusesUserTimelineByUid(id, since_id, "0", 10, 1, 0, 0, 0);
 			List<Weibo> weibo = null;
 			if (sinaDomain.containsKey("statuses")) {
 				weibo = SinaDomainUtils.getUserWeibos(sinaDomain);
-				logger.info(id + ":" + weibo.toString());
 				weibos.addAll(weibo);
 			}
 		}
@@ -64,7 +63,7 @@ public class ActiveUser {
 	public static void main(String[] args) {
 		ActiveUser users = new ActiveUser(new HttpClientDaoImpl());
 		List<String> ids = users.getActiveUserId(0);
-		List<Weibo> weibos = users.getActiveUserWeibo(ids);
+		List<Weibo> weibos = users.getActiveUserWeibo(ids, "0");
 		System.out.println(weibos.size());
 	}
 }
