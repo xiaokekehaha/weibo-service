@@ -1,27 +1,26 @@
 package zx.soft.weibo.mapred.sina.weibo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import zx.soft.hbase.api.core.HBaseTable;
+import zx.soft.utils.http.ClientDao;
+import zx.soft.utils.json.JsonUtils;
 import zx.soft.weibo.mapred.domain.Weibo;
 import zx.soft.weibo.mapred.source.SourceId;
+import zx.soft.weibo.mapred.utils.Constant;
+import zx.soft.weibo.sina.api.SinaWeiboAPI;
 
 public class HistoryWeiboThread implements Runnable {
 	public static Logger logger = LoggerFactory.getLogger(HistoryWeiboThread.class);
 	private List<String> uids;
-	private HConnection conn;
-	public static final String History_Weibo = "history_weibo";
-	public static final String History_Weibo_ColumnFamily = "sina_weibo";
+	private ClientDao client;
 
-	public HistoryWeiboThread(List<String> uids, HConnection conn) {
+	public HistoryWeiboThread(List<String> uids, ClientDao client) {
 		this.uids = uids;
-		this.conn = conn;
+		this.client = client;
 	}
 
 	@Override
@@ -29,7 +28,8 @@ public class HistoryWeiboThread implements Runnable {
 		String source = SourceId.getFirstUseful();
 		for (String uid : uids) {
 			List<Weibo> weibos = new ArrayList<>();
-			while ((weibos = HistoryWeibo.getHistoryWeibos(uid, source)) == null) {
+			SinaWeiboAPI api = new SinaWeiboAPI(client);
+			while ((weibos = HistoryWeibo.getHistoryWeibos(uid, source, api)) == null) {
 				logger.info("change source=" + source);
 				logger.info("达到次数限制，睡眠１小时");
 				try {
@@ -41,30 +41,9 @@ public class HistoryWeiboThread implements Runnable {
 			}
 			logger.info(uid + ":" + weibos.size());
 			if (weibos.size() > 0) {
-				save(weibos);
+				client.doPost(Constant.WEIBO_HISTORY_POST, JsonUtils.toJsonWithoutPretty(weibos));
 			}
 		}
 	}
 
-	private void save(List<Weibo> weibos) {
-		HBaseTable table = null;
-		try {
-			table = new HBaseTable(conn, HistoryWeiboThread.History_Weibo);
-		} catch (IOException e) {
-			logger.error("创建HBaseTable实例错误");
-			e.printStackTrace();
-		}
-		for (Weibo weibo : weibos) {
-			try {
-				table.putObject(weibo.getIdstr(), HistoryWeiboThread.History_Weibo_ColumnFamily, weibo);
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		table.close();
-	}
 }

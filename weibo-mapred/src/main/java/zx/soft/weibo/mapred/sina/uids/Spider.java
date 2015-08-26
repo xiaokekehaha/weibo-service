@@ -1,19 +1,21 @@
 package zx.soft.weibo.mapred.sina.uids;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import zx.soft.hbase.api.core.HBaseTable;
 import zx.soft.redis.client.cache.Cache;
+import zx.soft.utils.http.ClientDao;
+import zx.soft.utils.json.JsonUtils;
 import zx.soft.weibo.mapred.domain.User;
 import zx.soft.weibo.mapred.domain.UsersAndIds;
 import zx.soft.weibo.mapred.hdfs.HdfsWriter;
 import zx.soft.weibo.mapred.source.SourceId;
+import zx.soft.weibo.mapred.utils.Constant;
 
 public class Spider implements Runnable {
 
@@ -27,21 +29,13 @@ public class Spider implements Runnable {
 
 	private final Cache cache;
 
-	private final HConnection conn;
+	private final ClientDao client;
 
 	public static final String CLOSE_USERS_KEY = "sent:sina:closeUsers";
 
 	public static final String PROCESSED_USERS_KEY = "sent:sina:processedUsers";
 
 	public static final String WAIT_USERS_KEY = "sent:sina:waitUsers";
-
-	public static final String SINA_USER_BASEINFO = "sina_user_baseinfo";
-
-	public static final String USER_BASEINFO_COLUMNFAMILIES = "sina_domain";
-
-	public static final String SINA_USER_SCORE = "sina_user_score";
-
-	public static final String USER_SCORE_COLUMNFAMILIES = "score";
 
 	public static int key = 0;
 
@@ -58,7 +52,7 @@ public class Spider implements Runnable {
 			+ "return count";
 
 	public Spider(String uid, final Cache cache, HdfsWriter writer, SinaRelationshipDao relationshipDao,
-			HConnection conn) {
+			ClientDao client) {
 		if (StringUtils.isEmpty(uid)) {
 			logger.error("Uid is empty!");
 			throw new IllegalArgumentException("uid is empty");
@@ -67,7 +61,7 @@ public class Spider implements Runnable {
 		this.cache = cache;
 		this.writer = writer;
 		this.relationshipDao = relationshipDao;
-		this.conn = conn;
+		this.client = client;
 	}
 
 	@Override
@@ -112,53 +106,23 @@ public class Spider implements Runnable {
 	}
 
 	private void save2HBase(UsersAndIds userAndIds) {
-		HBaseTable table = null;
-		try {
-			table = new HBaseTable(conn, Spider.SINA_USER_BASEINFO);
-		} catch (IOException e) {
-			logger.error("创建HBaseTable实例错误");
-			e.printStackTrace();
-		}
 		if (userAndIds.getIds().size() > 0) {
-			List<User> users = userAndIds.getUsers();
-			List<String> rowKeys = userAndIds.getIds();
-			try {
-				table.putObjects(rowKeys, Spider.USER_BASEINFO_COLUMNFAMILIES, users);
-			} catch (InstantiationException e) {
-				logger.error("InstantiationException 插入失败");
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				logger.error("IllegalAccessException 插入失败");
-				e.printStackTrace();
-			} catch (IOException e) {
-				logger.error("IOException 插入失败");
-				e.printStackTrace();
-			}
-
+			client.doPost(Constant.USER_INFO_POST, JsonUtils.toJsonWithoutPretty(userAndIds.getUsers()));
 		}
-		table.close();
 	}
 
 	private void saveUserScore(UsersAndIds userAndIds) throws IOException {
-		HBaseTable table = null;
-		try {
-			table = new HBaseTable(conn, Spider.SINA_USER_SCORE);
-		} catch (IOException e) {
-			logger.error("创建HBaseTable实例错误");
-			e.printStackTrace();
-		}
 		if (userAndIds.getIds().size() > 0) {
+			Map<String, String> ids_scores = new HashMap<>();
 			for (User user : userAndIds.getUsers()) {
 				long created_time = user.getCreated_at().getTime();
 				int statuses_count = user.getStatuses_count();
 				//1243785600为2009年6.1日时间戳,与现在的时间差194955s1779850265
 				double score = (double) (statuses_count + 1) / ((created_time - 1243785600) / 86400000);
-				//存储<score，id>键值对
-				table.put(user.getIdstr(), Spider.USER_SCORE_COLUMNFAMILIES, "active", String.valueOf(score));
-				logger.info(user.getIdstr() + ":" + score + " put  success");
+				ids_scores.put(user.getIdstr(), String.valueOf(score));
+				client.doPost(Constant.USER_SCORE_POST, JsonUtils.toJsonWithoutPretty(ids_scores));
 			}
 		}
-		table.close();
 	}
 
 }

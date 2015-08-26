@@ -1,60 +1,64 @@
 package zx.soft.weibo.mapred.activeweibo;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import zx.soft.hbase.api.core.HBaseTable;
-import zx.soft.utils.http.HttpClientDaoImpl;
+import zx.soft.utils.http.ClientDao;
+import zx.soft.utils.json.JsonUtils;
 import zx.soft.weibo.mapred.domain.Weibo;
+import zx.soft.weibo.mapred.utils.Constant;
+import zx.soft.weibo.mapred.utils.SinaDomainUtils;
+import zx.soft.weibo.sina.api.SinaWeiboAPI;
+import zx.soft.weibo.sina.domain.SinaDomain;
 
 public class ActiveThread implements Runnable {
 
 	private static Logger logger = LoggerFactory.getLogger(ActiveThread.class);
-	public static final String ACTIVE_USERS_LASTEST_WEIBOS = "active_user_lastest_weibos";
-	public static final String ACTIVE_USERS_LASTEST_WEIBOS_COLUMNFAMILY = "lastest_weibos";
-	private ActiveUser activeUser;
-	private int from;
-	private HConnection conn;
-	private String sinceId;
 
-	public ActiveThread(int from, HConnection conn, String sinceId) {
-		this.activeUser = new ActiveUser(new HttpClientDaoImpl());
+	private int from;
+	private String sinceId;
+	private ClientDao clientDao;
+
+	public ActiveThread(int from, String sinceId, ClientDao clientDao) {
 		this.from = from;
-		this.conn = conn;
 		this.sinceId = sinceId;
+		this.clientDao = clientDao;
 	}
 
 	@Override
 	public void run() {
-		List<String> uids = activeUser.getActiveUserId(from);
-		List<Weibo> weibos = activeUser.getActiveUserWeibo(uids, sinceId);
-		//存储获得的微博信息
-		save(weibos);
+		List<String> uids = getActiveUserId(from);
+		List<Weibo> weibos = getActiveUserWeibo(uids, sinceId);
+		if (weibos.size() > 0) {
+			clientDao.doPost(Constant.WEIBO_LASTEST_POST, JsonUtils.toJsonWithoutPretty(weibos));
+			logger.info("post to lastest weibo and size=" + weibos.size());
+		}
 	}
 
-	private void save(List<Weibo> weibos) {
-		HBaseTable table = null;
-		try {
-			table = new HBaseTable(conn, ActiveThread.ACTIVE_USERS_LASTEST_WEIBOS);
-		} catch (IOException e) {
-			logger.error("创建HBaseTable实例错误");
-			e.printStackTrace();
-		}
-		for (Weibo weibo : weibos) {
-			try {
-				table.putObject(weibo.getIdstr(), ActiveThread.ACTIVE_USERS_LASTEST_WEIBOS_COLUMNFAMILY, weibo);
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+	private List<Weibo> getActiveUserWeibo(List<String> ids, String since_id) {
+		SinaWeiboAPI api = new SinaWeiboAPI(clientDao);
+		List<Weibo> weibos = new ArrayList<>();
+		for (String id : ids) {
+			SinaDomain sinaDomain = api.statusesUserTimelineByUid(id, since_id, "0", 10, 1, 0, 0, 0);
+			List<Weibo> weibo = null;
+			if (sinaDomain.containsKey("statuses")) {
+				weibo = SinaDomainUtils.getUserWeibos(sinaDomain);
+				weibos.addAll(weibo);
 			}
 		}
-		table.close();
+		return weibos;
 	}
+
+	private List<String> getActiveUserId(int from) {
+		List<String> topN = null;
+		String users = clientDao.doGet(Constant.USER_SCORE_GET + from);
+		String[] ids = users.replace("\"", "").replace("[", "").replace("]", "").split(",");
+		topN = Arrays.asList(ids);
+		return topN;
+	}
+
 }
