@@ -1,7 +1,13 @@
 package zx.soft.weibo.mapred.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import zx.soft.utils.http.ClientDao;
+import zx.soft.utils.http.HttpClientDaoImpl;
+import zx.soft.utils.json.JsonUtils;
 
 /**
  * 新浪用户基础信息数据模型
@@ -11,7 +17,7 @@ import java.util.Date;
  */
 public class User implements Serializable {
 
-	private static final long serialVersionUID = -4574543153431266465L;
+	//private static final long serialVersionUID = -4574543153431266465L;
 
 	// 用户id
 	private long id;
@@ -954,4 +960,13 @@ public class User implements Serializable {
 		this.urank = urank;
 	}
 
+	public static void main(String[] args) {
+		ClientDao clientDao = new HttpClientDaoImpl();
+		//User [id=3883727101, idstr=3883727101, uclass=1, screen_name=烟台发布, name=烟台发布, province=37, city=1000, location=山东, description=烟台市人民政府新闻办公室官方微博, url=, profile_image_url=http://tp2.sinaimg.cn/3883727101/50/5733269622/1, profile_url=u/3883727101, domain=, weihao=, gender=m, followers_count=706954, friends_count=245, pagefriends_count=6, statuses_count=3314, favourites_count=13, created_at=Fri Nov 01 10:54:10 CST 2013, following=false, allow_all_act_msg=false, geo_enabled=true, verified=true, verified_type=1, remark=, ptype=217, allow_all_comment=true, avatar_large=http://tp2.sinaimg.cn/3883727101/180/5733269622/1, avatar_hd=http://ww4.sinaimg.cn/crop.244.101.906.906.1024/e77cf8fdjw8eulnetc65ij219c13wtgd.jpg, verified_reason=山东省烟台市人民政府新闻办公室官方微博, verified_trade=0, verified_reason_url=, verified_source=, verified_source_url=, verified_state=0, verified_level=3, verified_reason_modified=, verified_contact_name=, verified_contact_email=, verified_contact_mobile=, follow_me=false, online_status=0, bi_followers_count=131, lang=zh-cn, star=0, mbtype=0, mbrank=0, block_word=0, block_app=0, credit_score=80, user_ability=0, urank=22],
+		User user = new Builder(3883727101L, "3883727101", "烟台发布", "烟台发布", new Date()).build();
+		List<User> users = new ArrayList<>();
+		users.add(user);
+		System.out.println(clientDao.doPostAndPutKeepAlive("http://192.168.6.126:8888/hbase/users/info",
+				JsonUtils.toJsonWithoutPretty(users)));
+	}
 }

@@ -38,6 +38,12 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
+		<!--impala查询需要的hive-jdbc -->
+		<dependency>
+			<groupId>org.apache.hive</groupId>
+			<artifactId>hive-jdbc</artifactId>
+			<version>0.13.1-cdh5.2.1</version>
+		</dependency>
 		<!-- Solr包 -->
 		<dependency>
 			<groupId>org.apache.solr</groupId>

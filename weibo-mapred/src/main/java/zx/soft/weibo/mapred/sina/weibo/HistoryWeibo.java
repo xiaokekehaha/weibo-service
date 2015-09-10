@@ -27,7 +27,14 @@ public class HistoryWeibo {
 			if (sinaDomain.containsKey("error_code")
 					&& sinaDomain.getFieldValue("error_code").toString().equals("10022")) {
 				logger.error("IP requests out of rate limit，return null");
-				return null;
+				try {
+					logger.info("sleep 1 hours");
+					Thread.sleep(3600_000);
+					logger.info("sleep over,retry...");
+					sinaDomain = api.statusesUserTimelineByUid(uid, "0", "0", PAGE_COUNT, page, 0, 0, 0, source);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 			if (sinaDomain != null) {
 				weibo = SinaDomainUtils.getUserWeibos(sinaDomain);

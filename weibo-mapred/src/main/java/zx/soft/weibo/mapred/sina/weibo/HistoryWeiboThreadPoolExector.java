@@ -1,20 +1,19 @@
 package zx.soft.weibo.mapred.sina.weibo;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import zx.soft.redis.client.cache.Cache;
+import zx.soft.redis.client.cache.CacheFactory;
 import zx.soft.utils.config.ConfigUtil;
 import zx.soft.utils.http.ClientDao;
 import zx.soft.utils.http.HttpClientDaoImpl;
+import zx.soft.weibo.mapred.sina.uids.Spider;
 import zx.soft.weibo.mapred.source.SourceId;
 import zx.soft.weibo.mapred.utils.ThreadPoolExecutorUtils;
-
-import com.google.protobuf.ServiceException;
 
 public class HistoryWeiboThreadPoolExector {
 
@@ -25,15 +24,32 @@ public class HistoryWeiboThreadPoolExector {
 		}
 	}
 
-	public static void main(String[] args) throws MasterNotRunningException, ZooKeeperConnectionException, IOException,
-			ServiceException, InterruptedException {
-		int cpuNums = 64;
-		ThreadPoolExecutor pool = ThreadPoolExecutorUtils.createExecutor(cpuNums);
-		List<List<String>> lists = UidsList.getSubList();
-		ClientDao client = new HttpClientDaoImpl();
-		for (int i = 0; i < lists.size(); i++) {
-			pool.execute(new HistoryWeiboThread(lists.get(i), client));
+	private static Logger logger = LoggerFactory.getLogger(HistoryWeiboThreadPoolExector.class);
+	private static long COUNT = 0;
+
+	public static void main(String[] args) {
+		long count = Long.MAX_VALUE;
+		if (args.length >= 1) {
+			count = Long.valueOf(args[0]);
+			logger.info("history Spider count: " + count);
 		}
+		int cpuNums = 4;
+		ThreadPoolExecutor pool = ThreadPoolExecutorUtils.createExecutor(cpuNums);
+		Cache cache = CacheFactory.getInstance();
+		ClientDao client = new HttpClientDaoImpl();
+
+		while (count-- > 0 && !pool.isShutdown()) {
+			String uid = cache.spop(Spider.PROCESSED_USERS_KEY);
+			logger.info("Retriving uids' count:{}", COUNT++);
+			if (uid != null) {
+				pool.execute(new HistoryWeiboThread(uid, client, cache));
+			} else if (pool.getActiveCount() == 0) {
+				logger.info("processedUsers queue is empty, exit...");
+				break;
+			}
+		}
+
+		logger.info("spider count=" + count + ";pool active count=" + pool.getActiveCount());
 		pool.shutdown();
 	}
 }

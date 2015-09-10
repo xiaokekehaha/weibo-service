@@ -49,12 +49,13 @@ public class SpiderSinaUidsMain {
 		}
 		ClientDao clientDao = new HttpClientDaoImpl();
 		SinaRelationshipDao dao = getSinaRelationshipDao(clientDao);
+
 		//另起线程循环扫描受到限制的source
 		Thread polling = new Thread(new Polling());
 		polling.setDaemon(true);
 		polling.start();
 
-		final int cpuNum = 64;
+		final int cpuNum = 4;
 		final ThreadPoolExecutor pool = ThreadPoolExecutorUtils.createExecutor(cpuNum);
 
 		try (HdfsWriter writer = new HdfsWriterSimpleImpl(Constant.getSinaUserFriendsPath());) {
@@ -75,7 +76,6 @@ public class SpiderSinaUidsMain {
 					break;
 				}
 			}
-			//conn.close();
 			logger.info("spider count=" + count + ";pool active count=" + pool.getActiveCount());
 			pool.shutdown();
 			//pool.awaitTermination(30, TimeUnit.SECONDS);
@@ -88,12 +88,12 @@ public class SpiderSinaUidsMain {
 		return (SinaRelationshipDao) Proxy.newProxyInstance(SinaRelationshipDao.class.getClassLoader(),
 				new Class[] { SinaRelationshipDao.class }, new RetryHandler<SinaRelationshipDao>(
 						new SinaRelationshipDaoImpl(clientDao), 5000, 10) {
-					@Override
-					protected boolean isRetry(Throwable e) {
-						Throwable cause = e.getCause();
-						return cause instanceof Exception;
-					}
-				});
+			@Override
+			protected boolean isRetry(Throwable e) {
+				Throwable cause = e.getCause();
+				return cause instanceof Exception;
+			}
+		});
 	}
 
 }

@@ -12,6 +12,7 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import zx.soft.weibo.mapred.domain.Comments;
 import zx.soft.weibo.mapred.domain.User;
 import zx.soft.weibo.mapred.domain.UsersAndIds;
 import zx.soft.weibo.mapred.domain.Visible;
@@ -118,6 +119,30 @@ public class SinaDomainUtils {
 		return new UsersAndIds(users, ids);
 	}
 
+	public static List<Comments> getWeiboComments(SinaDomain sinaDomain) {
+		List<Comments> comments = new ArrayList<>();
+		SinaDomain tmp = null;
+		if (sinaDomain.containsKey("comments") && sinaDomain.getFieldValues("comments").size() > 0
+				&& (!sinaDomain.isEmpty())) {
+			for (Object comment : sinaDomain.getFieldValues("comments")) {
+				try {
+					tmp = (SinaDomain) comment;
+					comments.add(new Comments.Builder(getLong(tmp, "id"), dateChange(getString(tmp, "created_at")),
+							getString(tmp, "text"), getUser(tmp, "user").getId(),
+							getUser(tmp, "user").getScreen_name(), getInt(tmp, "source_type"), getWeibo(tmp).getId(),
+							getWeibo(tmp).getUser().getId(), getWeibo(tmp).getUser().getScreen_name()).build());
+				} catch (ClassCastException e) {
+					if (comment.toString().equals("[]")) {
+						logger.info("已爬取所有微博,后续请求返回为" + comment.toString());
+					}
+					return comments;
+				}
+
+			}
+		}
+		return comments;
+	}
+
 	private static String getString(SinaDomain sinaDomain, String key) {
 		try {
 			return sinaDomain.getFieldValue(key).toString();
@@ -211,5 +236,34 @@ public class SinaDomainUtils {
 			logger.error(e.getMessage() + ";解析时间出错，以当前时间为created_date");
 			return new Date();
 		}
+	}
+
+	private static Weibo getWeibo(SinaDomain sinaDomain) {
+		SinaDomain tmp = null;
+		Weibo weibo = null;
+		if (sinaDomain.containsKey("status") && (!sinaDomain.isEmpty())) {
+			try {
+				tmp = (SinaDomain) sinaDomain.getFieldValue("status");
+				weibo = new Weibo.Builder(getString(tmp, "id"), getString(tmp, "mid"), getString(tmp, "idstr"),
+						dateChange(getString(tmp, "created_at"))).setText(getString(tmp, "text"))
+						.setSource_allowclick(getInt(tmp, "source_allowclick"))
+						.setSource_type(getInt(tmp, "source_type")).setSource(getString(tmp, "source"))
+						.setFavorited(getBoolean(tmp, "favorited")).setTruncated(getBoolean(tmp, "truncated"))
+						.setIn_reply_to_status_id(getString(tmp, "in_reply_to_status_id"))
+						.setIn_reply_to_user_id(getString(tmp, "in_reply_to_user_id"))
+						.setIn_reply_to_screen_name(getString(tmp, "in_reply_to_screen_name"))
+						.setPic_urls(getList(tmp, "pic_urls")).setGeo(getString(tmp, "geo"))
+						.setUser(getUser(tmp, "user")).setReposts_count(getInt(tmp, "reposts_count"))
+						.setComments_count(getInt(tmp, "comments_count"))
+						.setAttitudes_count(getInt(tmp, "attitudes_count")).setMlevel(getInt(tmp, "mlevel"))
+						.setVisible(getVisible(tmp, "visible")).setDarwin_tags(getList(tmp, "darwin_tags"))
+						.setOwid(getLong(tmp, "owid")).setOusername(getLong(tmp, "ousername")).build();
+			} catch (ClassCastException e) {
+				if (weibo.toString().equals("[]")) {
+					logger.info("status字段为空" + weibo.toString());
+				}
+			}
+		}
+		return weibo;
 	}
 }

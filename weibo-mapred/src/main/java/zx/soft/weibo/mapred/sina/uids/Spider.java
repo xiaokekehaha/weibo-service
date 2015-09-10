@@ -37,8 +37,6 @@ public class Spider implements Runnable {
 
 	public static final String WAIT_USERS_KEY = "sent:sina:waitUsers";
 
-	public static int key = 0;
-
 	/**
 	 * 如果members不在key2和key3所关联的set中，则保存到key1所关联的set中
 	 */
@@ -73,13 +71,13 @@ public class Spider implements Runnable {
 			// 分别获取用户关注和粉丝详细数据
 			UsersAndIds friends = relationshipDao.getFriends(uid, source);
 			UsersAndIds followers = relationshipDao.getFollowers(uid, source);
-			// 判断是否为空
+			logger.info("目前用户id: " + uid);
 			if (friends != null && followers != null) {
 				/******************用户详细信息列表存入HBase*****************/
 				save2HBase(friends);
 				/***************将用户活跃度得分存入hbase表*****************/
 				saveUserScore(friends);
-				/******************用户ID信息列表存入Redis集群*****************/
+				/******************用户ID信息列表存入hdfs*****************/
 				save(uid, friends.getIds().toArray(new String[0]));
 				String[] keys = new String[] { WAIT_USERS_KEY, PROCESSED_USERS_KEY, CLOSE_USERS_KEY };
 				cache.eval(SADD_IF_NOT_EXIST_Others_script, keys, friends.getIds().toArray(new String[0]));
@@ -107,7 +105,9 @@ public class Spider implements Runnable {
 
 	private void save2HBase(UsersAndIds userAndIds) {
 		if (userAndIds.getIds().size() > 0) {
-			client.doPost(Constant.USER_INFO_POST, JsonUtils.toJsonWithoutPretty(userAndIds.getUsers()));
+			logger.info(client.doPostAndPutKeepAlive(Constant.USER_INFO_POST,
+					JsonUtils.toJsonWithoutPretty(userAndIds.getUsers()))
+					+ ";user:" + userAndIds.getIds().size());
 		}
 	}
 
@@ -120,8 +120,10 @@ public class Spider implements Runnable {
 				//1243785600为2009年6.1日时间戳,与现在的时间差194955s1779850265
 				double score = (double) (statuses_count + 1) / ((created_time - 1243785600) / 86400000);
 				ids_scores.put(user.getIdstr(), String.valueOf(score));
-				client.doPost(Constant.USER_SCORE_POST, JsonUtils.toJsonWithoutPretty(ids_scores));
 			}
+			logger.info(client.doPostAndPutKeepAlive(Constant.USER_SCORE_POST,
+					JsonUtils.toJsonWithoutPretty(ids_scores))
+					+ ";user_score:" + userAndIds.getIds().size());
 		}
 	}
 

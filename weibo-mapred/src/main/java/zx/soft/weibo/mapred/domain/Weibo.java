@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class Weibo implements Serializable {
 
-	private static final long serialVersionUID = -6844154705443750491L;
+	//private static final long serialVersionUID = -6844154705443750491L;
 
 	// 微博创建时间
 	private Date created_at;
