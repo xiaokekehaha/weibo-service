@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import zx.soft.weibo.mapred.domain.User;
 import zx.soft.weibo.mapred.domain.UsersAndIds;
-import zx.soft.weibo.mapred.source.SourceId;
 import zx.soft.weibo.mapred.utils.SinaDomainUtils;
 import zx.soft.weibo.sina.api.SinaWeiboAPI;
 import zx.soft.weibo.sina.domain.SinaDomain;
@@ -91,8 +90,20 @@ public class FriendshipsDetail {
 			}
 			if (sinaDomain.getFieldValue("error_code").toString().equals("10022")) {
 				logger.error("IP requests out of rate limit");
-				SourceId.addIdUselesses(source);
-				SourceId.removeIdUseful(source);
+				try {
+					logger.info("now,sleep 1 hours");
+					Thread.sleep(3600_000);
+					logger.info("now,try again");
+					if (isFollower) {
+						sinaDomain = api.friendshipsFollowers(uid, PAGE_COUNT, 0, 1, source);
+					} else {
+						sinaDomain = api.friendshipsFriends(uid, PAGE_COUNT, 0, 1, source);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				//				SourceId.addIdUselesses(source);
+				//				SourceId.removeIdUseful(source);
 			}
 			if (sinaDomain.getFieldValue("error_code").toString().equals("10011")) {
 				logger.error("RPC ERROR");

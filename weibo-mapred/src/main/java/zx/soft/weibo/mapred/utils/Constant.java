@@ -1,7 +1,17 @@
 package zx.soft.weibo.mapred.utils;
 
+import java.util.Properties;
+
+import zx.soft.utils.config.ConfigUtil;
+
 public class Constant {
 
+	private static String target;
+
+	static {
+		Properties props = ConfigUtil.getProps("server.properties");
+		target = "http://" + props.getProperty("server.ip") + ":" + props.getProperty("server.port");
+	}
 	//活跃用户最新微博信息表
 	public static final String LASTEST_WEIBO_TABLE = "lastest_weibo";
 	//历史微博表
@@ -18,7 +28,6 @@ public class Constant {
 
 	public static final String USER_SCORE_Q = "score";
 
-	private static String target = "http://192.168.6.126:8888";
 	public static final String USER_INFO_POST = target + "/hbase/users/info";
 	public static final String WEIBO_HISTORY_POST = target + "/hbase/weibos/history";
 	public static final String WEIBO_LASTEST_POST = target + "/hbase/weibos/lastest";

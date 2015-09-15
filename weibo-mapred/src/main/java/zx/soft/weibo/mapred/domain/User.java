@@ -966,7 +966,7 @@ public class User implements Serializable {
 		User user = new Builder(3883727101L, "3883727101", "烟台发布", "烟台发布", new Date()).build();
 		List<User> users = new ArrayList<>();
 		users.add(user);
-		System.out.println(clientDao.doPostAndPutKeepAlive("http://192.168.6.126:8888/hbase/users/info",
+		System.out.println(clientDao.doPost("http://192.168.6.126:8888/hbase/users/info",
 				JsonUtils.toJsonWithoutPretty(users)));
 	}
 }

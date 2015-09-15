@@ -16,7 +16,6 @@ import zx.soft.utils.http.HttpClientDaoImpl;
 import zx.soft.utils.retry.RetryHandler;
 import zx.soft.weibo.mapred.hdfs.HdfsWriter;
 import zx.soft.weibo.mapred.hdfs.HdfsWriterSimpleImpl;
-import zx.soft.weibo.mapred.source.Polling;
 import zx.soft.weibo.mapred.source.SourceId;
 import zx.soft.weibo.mapred.utils.ThreadPoolExecutorUtils;
 
@@ -50,11 +49,6 @@ public class SpiderSinaUidsMain {
 		ClientDao clientDao = new HttpClientDaoImpl();
 		SinaRelationshipDao dao = getSinaRelationshipDao(clientDao);
 
-		//另起线程循环扫描受到限制的source
-		Thread polling = new Thread(new Polling());
-		polling.setDaemon(true);
-		polling.start();
-
 		final int cpuNum = 4;
 		final ThreadPoolExecutor pool = ThreadPoolExecutorUtils.createExecutor(cpuNum);
 
@@ -78,22 +72,20 @@ public class SpiderSinaUidsMain {
 			}
 			logger.info("spider count=" + count + ";pool active count=" + pool.getActiveCount());
 			pool.shutdown();
-			//pool.awaitTermination(30, TimeUnit.SECONDS);
 		}
 
-		//ApplyThreadPool.stop(cpuNum);
 	}
 
 	private static SinaRelationshipDao getSinaRelationshipDao(ClientDao clientDao) {
 		return (SinaRelationshipDao) Proxy.newProxyInstance(SinaRelationshipDao.class.getClassLoader(),
 				new Class[] { SinaRelationshipDao.class }, new RetryHandler<SinaRelationshipDao>(
 						new SinaRelationshipDaoImpl(clientDao), 5000, 10) {
-			@Override
-			protected boolean isRetry(Throwable e) {
-				Throwable cause = e.getCause();
-				return cause instanceof Exception;
-			}
-		});
+					@Override
+					protected boolean isRetry(Throwable e) {
+						Throwable cause = e.getCause();
+						return cause instanceof Exception;
+					}
+				});
 	}
 
 }

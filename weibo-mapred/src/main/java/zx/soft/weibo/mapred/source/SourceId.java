@@ -4,20 +4,20 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SourceId {
 
+	private static Logger logger = LoggerFactory.getLogger(SourceId.class);
 	private static LinkedList<String> usefuls = new LinkedList<>();
 	private static LinkedList<String> uselesses = new LinkedList<>();
 
 	public static String getFirstUseful() {
 		String tmp = null;
 		synchronized (usefuls) {
-			while (usefuls.isEmpty()) {
-				try {
-					Thread.sleep(10 * 60 * 1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			if (usefuls.isEmpty()) {
+				logger.error("useful source count is zero");
 			}
 			tmp = usefuls.remove(0);
 			usefuls.add(tmp);

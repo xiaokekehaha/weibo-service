@@ -43,8 +43,7 @@ public class ActiveThread implements Runnable {
 			cache.sadd(ActiveThread.UPDATED_WEIBO_ACTIVE_USER, uids.toArray(new String[0]));
 			List<Weibo> weibos = getActiveUserWeibo(uids, sinceId);
 			if (weibos.size() > 0) {
-				logger.info(clientDao.doPostAndPutKeepAlive(Constant.WEIBO_LASTEST_POST,
-						JsonUtils.toJsonWithoutPretty(weibos)));
+				logger.info(clientDao.doPost(Constant.WEIBO_LASTEST_POST, JsonUtils.toJsonWithoutPretty(weibos)));
 				logger.info("post to lastest weibo and size=" + weibos.size());
 			}
 		} catch (Exception e) {

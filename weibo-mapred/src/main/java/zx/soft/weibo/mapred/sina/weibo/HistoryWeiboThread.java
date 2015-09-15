@@ -36,20 +36,17 @@ public class HistoryWeiboThread implements Runnable {
 			List<Weibo> weibos = new ArrayList<>();
 			SinaWeiboAPI api = new SinaWeiboAPI(client);
 			weibos = HistoryWeibo.getHistoryWeibos(uid, source, api);
-			//logger.info(uid + ":" + weibos.size());
 
 			if (weibos.size() > 0) {
 				List<Weibo> wei = new ArrayList<>();
 				for (int i = 0; i < weibos.size(); i++) {
 					if (((i + 1) % 50) == 0) {
-						client.doPostAndPutKeepAlive(Constant.WEIBO_HISTORY_POST, JsonUtils.toJsonWithoutPretty(wei));
-						//logger.info( + ";size=" + wei.size()));
+						client.doPost(Constant.WEIBO_HISTORY_POST, JsonUtils.toJsonWithoutPretty(wei));
 						wei.clear();
 					}
 					wei.add(weibos.get(i));
 				}
-				client.doPostAndPutKeepAlive(Constant.WEIBO_HISTORY_POST, JsonUtils.toJsonWithoutPretty(wei));
-				//logger.info(	+ ";size=" + wei.size()));
+				client.doPost(Constant.WEIBO_HISTORY_POST, JsonUtils.toJsonWithoutPretty(wei));
 				wei.clear();
 			}
 		} catch (Exception e) {

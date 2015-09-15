@@ -64,9 +64,8 @@ public class Spider implements Runnable {
 
 	@Override
 	public void run() {
-
-		String source = SourceId.getFirstUseful();
 		try {
+			String source = SourceId.getFirstUseful();
 			cache.sadd(PROCESSED_USERS_KEY, uid);
 			// 分别获取用户关注和粉丝详细数据
 			UsersAndIds friends = relationshipDao.getFriends(uid, source);
@@ -105,8 +104,7 @@ public class Spider implements Runnable {
 
 	private void save2HBase(UsersAndIds userAndIds) {
 		if (userAndIds.getIds().size() > 0) {
-			logger.info(client.doPostAndPutKeepAlive(Constant.USER_INFO_POST,
-					JsonUtils.toJsonWithoutPretty(userAndIds.getUsers()))
+			logger.info(client.doPost(Constant.USER_INFO_POST, JsonUtils.toJsonWithoutPretty(userAndIds.getUsers()))
 					+ ";user:" + userAndIds.getIds().size());
 		}
 	}
@@ -121,8 +119,7 @@ public class Spider implements Runnable {
 				double score = (double) (statuses_count + 1) / ((created_time - 1243785600) / 86400000);
 				ids_scores.put(user.getIdstr(), String.valueOf(score));
 			}
-			logger.info(client.doPostAndPutKeepAlive(Constant.USER_SCORE_POST,
-					JsonUtils.toJsonWithoutPretty(ids_scores))
+			logger.info(client.doPost(Constant.USER_SCORE_POST, JsonUtils.toJsonWithoutPretty(ids_scores))
 					+ ";user_score:" + userAndIds.getIds().size());
 		}
 	}
