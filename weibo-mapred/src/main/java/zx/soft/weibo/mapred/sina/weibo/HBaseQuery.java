@@ -55,11 +55,11 @@ public class HBaseQuery {
 			if (args.length > 0) {
 				minStamp = Long.valueOf(args[0]);
 			} else {
-				minStamp = (new Date().getTime() / (3600_000 * 12)) * 3600_000 * 12;
+				minStamp = (new Date().getTime() / (3600_000 * 24)) * 3600_000 * 24;
 			}
 			HBaseQuery query = new HBaseQuery();
 			while (true) {
-				for (int j = 1; j < 13; j++) {
+				for (int j = 1; j < 25; j++) {
 					now = System.currentTimeMillis();
 					maxStamp = minStamp + j * 3600_000;
 					if (now < maxStamp) {
