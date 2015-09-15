@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mainClass=zx.soft.sent.solr.driver.SentSolrDriver
+mainClass=zx.soft.weibo.mapred.driver.WeiboMapredDriver
 
 # resolve links - $0 may be a softlink
 PRG="$0"
