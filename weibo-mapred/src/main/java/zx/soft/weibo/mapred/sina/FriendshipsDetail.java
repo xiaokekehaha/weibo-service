@@ -102,8 +102,6 @@ public class FriendshipsDetail {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				//				SourceId.addIdUselesses(source);
-				//				SourceId.removeIdUseful(source);
 			}
 			if (sinaDomain.getFieldValue("error_code").toString().equals("10011")) {
 				logger.error("RPC ERROR");
