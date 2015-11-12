@@ -8,3 +8,6 @@
 *~
 target/
 logs/
+weibo-core/src/main/resources/super.properties
+weibo-mapred/src/main/resources/super.properties
+weibo-sina/src/main/resources/super.properties
