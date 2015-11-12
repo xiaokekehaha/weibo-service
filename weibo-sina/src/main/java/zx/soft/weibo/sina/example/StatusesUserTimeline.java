@@ -29,8 +29,8 @@ public class StatusesUserTimeline {
 	public static void main(String[] args) {
 
 		SinaWeiboAPI api = new SinaWeiboAPI(new HttpClientDaoImpl());//3194139109,3442868347
-		//SinaDomain sinaDomain = api.statusesUserTimelineByUid("1732243641", "0", "0", 5, 1, 0, 0, 0, "3442868347");
-		SinaDomain sinaDomain = api.statusesUserTimelineByScreenName("暂时胆小", "0", "0", 5, 1, 0, 0, 0, "3442868347");
+		//SinaDomain sinaDomain = api.statusesUserTimelineByUid("5110432155", "0", "0", 5, 1, 0, 0, 0, "3442868347");
+		SinaDomain sinaDomain = api.statusesUserTimelineByScreenName("孙杨", "0", "0", 5, 1, 0, 0, 0, "3442868347");
 		System.out.println(JsonUtils.toJson(sinaDomain));
 		//3872946600794464
 	}

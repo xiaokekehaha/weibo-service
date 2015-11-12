@@ -1,7 +1,7 @@
 package zx.soft.weibo.mapred.sina.weibo;
 
 import java.io.IOException;
-import java.util.Date;
+import java.util.Calendar;
 
 import org.apache.hadoop.hbase.client.HConnection;
 import org.slf4j.Logger;
@@ -55,7 +55,11 @@ public class HBaseQuery {
 			if (args.length > 0) {
 				minStamp = Long.valueOf(args[0]);
 			} else {
-				minStamp = (new Date().getTime() / (3600_000 * 24)) * 3600_000 * 24;
+				Calendar cal = Calendar.getInstance();
+				cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+				cal.set(Calendar.MILLISECOND, 0);
+				minStamp = cal.getTimeInMillis();
+				//minStamp = (new Date().getTime() / (3600_000 * 24)) * 3600_000 * 24;
 			}
 			HBaseQuery query = new HBaseQuery();
 			while (true) {
