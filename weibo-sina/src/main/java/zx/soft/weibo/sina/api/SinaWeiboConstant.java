@@ -76,7 +76,7 @@ public class SinaWeiboConstant {
 	 */
 	public static final String COMMENTS_SHOW = ROOT_URL + COMMENTS + "show.json";
 
-	public static final String REPOSTS_SHOW = ROOT_URL + STATUSES + "repost_timeline.json";
+	public static final String REPOSTS_SHOW = "http://api.t.sina.com.cn:80/" + STATUSES + "repost_timeline.json";
 	/**
 	 * 4、用户
 	 */
