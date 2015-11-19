@@ -153,8 +153,7 @@ public class SinaWeiboAPI {
 				.setParams("since_id", sinceId).setParams("max_id", maxId).setParams("count", count + "")
 				.setParams("page", page + "").build();
 		String data = clientDao.doGet(requestURL.getURL(), cookie, "UTF-8");
-		List<SinaDomain> result = parseListJsonTree(data);
-		return result;
+		return parseListJsonTree(data);
 	}
 
 	/**
@@ -300,6 +299,16 @@ public class SinaWeiboAPI {
 	 * @return 解析好的JSON对象
 	 */
 	private List<SinaDomain> parseListJsonTree(String jsonStr) {
+
+		if (jsonStr.contains("error_code")) {
+			if (jsonStr.contains("error") && jsonStr.contains("40310:User requests out of rate limit!")) {
+				logger.warn("用户请求限制,请稍后再试");
+				return null;
+			} else if (jsonStr.contains("error") && jsonStr.contains("40312:Error: IP requests out of rate limit!")) {
+				logger.warn("IP请求限制,请稍后再试");
+				return null;
+			}
+		}
 		List<SinaDomain> result = new ArrayList<>();
 		JsonNode node = JsonNodeUtils.getJsonNode(jsonStr);
 		for (JsonNode n : node) {
